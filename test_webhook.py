@@ -1,6 +1,7 @@
 """Webhook va ALERT formatlari uchun avtomatik testlar."""
 
 import unittest
+import asyncio
 from unittest.mock import patch
 
 import app
@@ -25,6 +26,15 @@ class AlertBotTests(unittest.TestCase):
                 for label in required_labels:
                     self.assertIn(label, message)
                 self.assertEqual(message.count("N/A"), 5)
+
+    def test_event_loop_can_be_created_for_python_313(self):
+        loop = asyncio.new_event_loop()
+        try:
+            asyncio.set_event_loop(loop)
+            self.assertIs(asyncio.get_event_loop(), loop)
+        finally:
+            loop.close()
+            asyncio.set_event_loop(None)
 
     @patch("app.CHAT_ID_1", "-1001234567890")
     @patch("app.CHAT_ID_2", "-1009876543210")

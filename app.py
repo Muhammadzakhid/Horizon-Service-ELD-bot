@@ -1,5 +1,6 @@
 """ELD webhook signals -> formatted Telegram alerts."""
 
+import asyncio
 import html
 import json
 import logging
@@ -366,6 +367,13 @@ async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 
 def run_bot() -> None:
+    # Python 3.13 no longer creates a default event loop implicitly in the main
+    # thread. python-telegram-bot's synchronous run_polling wrapper requires one.
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
     # PTB uses a separate request object for long polling. Configuring both
     # prevents the initial getMe call and getUpdates loop from retaining the
     # short HTTPX defaults.
