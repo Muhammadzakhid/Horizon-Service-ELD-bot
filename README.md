@@ -19,6 +19,11 @@ Kompaniya bo‘yicha webhook manzillari:
 4. Botni ishga tushiring: `python app.py`
 5. Botni kerakli guruhga qo‘shib, guruhda `/start` yuboring.
 
+Alertlarni ikkita muayyan manzilga yuborish uchun `.env` ichida `CHAT_ID_1` va
+`CHAT_ID_2` belgilang. Masalan, `CHAT_ID_1=-1001234567890`. Ular sozlangan
+bo‘lsa, alertlar shu chatlarga boradi va `/start` bilan obuna bo‘lish shart
+emas. Kanalda botga post yuborish huquqi berilishi kerak.
+
 Bot buyruqlari:
 
 - `/start` — joriy chatni ALERT oluvchilar ro‘yxatiga qo‘shadi.
@@ -84,6 +89,6 @@ orqali oching. `.env` ichida kuchli `WEBHOOK_SECRET` belgilang va uni ELD
 so‘rovlarida `X-Webhook-Secret` sarlavhasi bilan yuboring. `.env` faylini git’ga
 joylamang.
 
-`7sky_api` va `msv_api` kalitlari ELD servisidan faol ravishda ma’lumot olish
+`sevensky_api` va `msv_api` kalitlari ELD servisidan faol ravishda ma’lumot olish
 uchun bo‘lsa, servisning API base URL’i, endpointlari va javob namunasi ham kerak.
 Webhook qabul qilishning o‘zi bu kalitlar bilan avtomatik polling qilmaydi.

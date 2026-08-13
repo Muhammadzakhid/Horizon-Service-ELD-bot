@@ -26,6 +26,14 @@ class AlertBotTests(unittest.TestCase):
                     self.assertIn(label, message)
                 self.assertEqual(message.count("N/A"), 5)
 
+    @patch("app.CHAT_ID_1", "-1001234567890")
+    @patch("app.CHAT_ID_2", "-1009876543210")
+    @patch("app.CHAT_ID", "")
+    @patch("app.load_subscribers", return_value={999})
+    def test_fixed_chat_ids_override_subscribers(self, load_subscribers):
+        self.assertEqual(app.alert_recipients(), {-1001234567890, -1009876543210})
+        load_subscribers.assert_not_called()
+
     def test_html_from_webhook_is_escaped(self):
         message = app.format_weigh_station({"driver_name": "<Admin & Driver>"})
         self.assertIn("&lt;Admin &amp; Driver&gt;", message)

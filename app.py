@@ -23,6 +23,9 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "").strip()
 SUBSCRIBERS_FILE = Path(os.getenv("SUBSCRIBERS_FILE", "subscribers.json"))
+CHAT_ID = os.getenv("CHAT_ID", "").strip()  # eski konfiguratsiya uchun
+CHAT_ID_1 = os.getenv("CHAT_ID_1", "").strip()
+CHAT_ID_2 = os.getenv("CHAT_ID_2", "").strip()
 PORT = int(os.getenv("PORT", "8000"))
 MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", "65536"))
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -50,6 +53,22 @@ def load_subscribers() -> set[int]:
         return {int(value) for value in values}
     except (FileNotFoundError, json.JSONDecodeError, OSError, TypeError, ValueError):
         return set()
+
+
+def alert_recipients() -> set[int]:
+    """Use fixed chat IDs when configured; otherwise use /start subscribers."""
+    configured_ids = [value for value in (CHAT_ID_1, CHAT_ID_2) if value]
+    if not configured_ids and CHAT_ID:
+        configured_ids = [CHAT_ID]
+    if configured_ids:
+        recipients = set()
+        for value in configured_ids:
+            try:
+                recipients.add(int(value))
+            except ValueError:
+                logger.error("CHAT_ID noto'g'ri: %r butun son bo'lishi kerak", value)
+        return recipients
+    return load_subscribers()
 
 
 def save_subscribers(chat_ids: set[int]) -> None:
@@ -221,7 +240,7 @@ def send_telegram_message(chat_id: int, message: str) -> bool:
 
 
 def broadcast_alert(message: str) -> dict[str, int]:
-    subscribers = load_subscribers()
+    subscribers = alert_recipients()
     sent = sum(send_telegram_message(chat_id, message) for chat_id in subscribers)
     return {
         "sent": sent,
@@ -232,13 +251,14 @@ def broadcast_alert(message: str) -> dict[str, int]:
 
 @flask_app.get("/health")
 def health():
-    subscribers = len(load_subscribers())
+    subscribers = len(alert_recipients())
     ready = bool(BOT_TOKEN and subscribers)
     return jsonify({
         "status": "ok" if ready else "degraded",
         "bot_token_configured": bool(BOT_TOKEN),
         "webhook_protected": bool(WEBHOOK_SECRET),
         "subscribers": subscribers,
+        "fixed_chat_configured": bool(CHAT_ID_1 or CHAT_ID_2 or CHAT_ID),
         "time": datetime.now(timezone.utc).isoformat(),
     }), 200 if ready else 503
 
